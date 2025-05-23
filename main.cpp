@@ -1,3 +1,4 @@
+// Konwersja Drzewa Binarnego na Drzewo BST
 #include <algorithm>
 #include <iostream>
 #include <vector>
@@ -27,16 +28,14 @@ void arrayToBST(Node *root, std::vector<int> &vals, int &idx) {
   arrayToBST(root->right, vals, idx);
 }
 
-// Funkcja konwertująca drzewo binarne na BST
 void binaryTreeToBST(Node *root) {
   std::vector<int> vals;
-  storeInorder(root, vals);            // Krok 1
-  std::sort(vals.begin(), vals.end()); // Krok 2
+  storeInorder(root, vals);           
+  std::sort(vals.begin(), vals.end()); 
   int idx = 0;
-  arrayToBST(root, vals, idx); // Krok 3
+  arrayToBST(root, vals, idx); 
 }
 
-// Pomocnicza funkcja inorder do sprawdzenia wyniku
 void printInorder(Node *root) {
   if (!root)
     return;
@@ -45,7 +44,6 @@ void printInorder(Node *root) {
   printInorder(root->right);
 }
 
-// Przykład użycia
 int main() {
   /*
           10
