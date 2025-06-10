@@ -13,6 +13,14 @@ struct Node {
   Node(int v) : val(v), left(nullptr), right(nullptr) {}
 };
 
+void freeTree(Node *root) {
+  if (root) {
+    freeTree(root->left);
+    freeTree(root->right);
+    delete root;
+  }
+}
+
 Node *loadTreeFromString(const std::string &str, size_t &pos) {
   if (pos >= str.length() || str[pos] == ';' || str[pos] == ']') {
     return nullptr;
@@ -45,19 +53,19 @@ Node *loadTreeFromString(const std::string &str, size_t &pos) {
   Node *node = new Node(value);
 
   if (pos < str.length() && str[pos] == '[') {
-    pos++; // Consume '['
+    pos++;
 
     node->left = loadTreeFromString(str, pos);
 
     if (pos < str.length() && str[pos] == ';') {
-      pos++; // Consume ';'
+      pos++;
       node->right = loadTreeFromString(str, pos);
     }
 
     if (pos < str.length() && str[pos] == ']') {
-      pos++; // Consume ']'
+      pos++;
     } else {
-      delete node;
+      freeTree(node);
       throw std::runtime_error(
           "Nieprawidlowy format danych: brak zamykajacego ']' po parsowaniu "
           "dzieci dla wartosci " +
@@ -69,33 +77,32 @@ Node *loadTreeFromString(const std::string &str, size_t &pos) {
 
 Node *loadTreeFromFile(const std::string &filename) {
   std::ifstream file(filename);
+
   if (!file.is_open()) {
     throw std::runtime_error("Nie mozna otworzyc pliku: " + filename);
   }
+
   std::string content;
   if (!std::getline(file, content)) {
-    // Allow empty file to represent an empty tree, or handle as error
     if (file.eof() && content.empty())
       return nullptr;
     throw std::runtime_error("Plik jest pusty lub nie mozna odczytac linii: " +
                              filename);
   }
   if (content.empty())
-    return nullptr; // Empty line means empty tree
+    return nullptr;
 
   size_t pos = 0;
   Node *root = loadTreeFromString(content, pos);
 
-  // Optional: Check for trailing characters after a valid tree structure
   if (pos < content.length()) {
-    // This part can be enabled if strict parsing of the whole line is needed
-    // std::string trailing_chars = content.substr(pos);
-    // if (!std::all_of(trailing_chars.begin(), trailing_chars.end(), isspace))
-    // { // Allow trailing whitespace
-    //     freeTree(root); // Clean up partially parsed tree
-    //     throw std::runtime_error("Nieprawidlowy format danych: dodatkowe
-    //     znaki '" + trailing_chars + "' po strukturze drzewa");
-    // }
+    std::string trailing_chars = content.substr(pos);
+    if (!std::all_of(trailing_chars.begin(), trailing_chars.end(), isspace)) {
+      freeTree(root);
+      throw std::runtime_error(
+          "Nieprawidlowy format danych: dodatkowe znaki '" + trailing_chars +
+          "' po strukturze drzewa");
+    }
   }
   return root;
 }
@@ -136,14 +143,6 @@ void printInorder(Node *root) {
   printInorder(root->right);
 }
 
-void freeTree(Node *root) {
-  if (root) {
-    freeTree(root->left);
-    freeTree(root->right);
-    delete root;
-  }
-}
-
 void printVisualTreeRecursive(Node *node, const std::string &prefix,
                               bool isLeftChild, bool isRoot) {
   if (node == nullptr) {
@@ -176,7 +175,8 @@ void renderTreeInTerminal(Node *root) {
 }
 
 int main(int argc, char *argv[]) {
-  Node *root = nullptr; // Initialize root to nullptr
+  Node *root = nullptr;
+
   try {
     std::string filename;
     if (argc > 1) {
@@ -214,21 +214,19 @@ int main(int argc, char *argv[]) {
       std::cout << std::endl;
     }
     freeTree(root);
-    root = nullptr; // Set to null after freeing
+    root = nullptr;
 
   } catch (const std::exception &e) {
     std::cerr << "Blad: " << e.what() << std::endl;
-    if (root) { // Ensure tree is freed if an error occurs after loading
+    if (root) {
       freeTree(root);
     }
     return 1;
   }
 
   std::cout << "Nacisnij Enter, aby zakonczyc...";
-  // Clear potential leftover newline from previous input
-  if (std::cin.peek() == '\n') {
-    std::cin.ignore();
-  }
+  std::cin.clear();
   std::cin.get();
+
   return 0;
 }
