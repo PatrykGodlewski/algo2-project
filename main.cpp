@@ -84,27 +84,31 @@ Node *loadTreeFromFile(const std::string &filename) {
 
   std::string content;
   if (!std::getline(file, content)) {
-    if (file.eof() && content.empty())
+    if (file.eof())
       return nullptr;
-    throw std::runtime_error("Plik jest pusty lub nie mozna odczytac linii: " +
-                             filename);
+
+    throw std::runtime_error("Wystapil blad odczytu pliku: " + filename);
   }
+
   if (content.empty())
     return nullptr;
 
   size_t pos = 0;
   Node *root = loadTreeFromString(content, pos);
 
-  if (pos < content.length()) {
-    std::string trailing_chars = content.substr(pos);
-    if (!std::all_of(trailing_chars.begin(), trailing_chars.end(), isspace)) {
-      freeTree(root);
-      throw std::runtime_error(
-          "Nieprawidlowy format danych: dodatkowe znaki '" + trailing_chars +
-          "' po strukturze drzewa");
-    }
-  }
-  return root;
+  bool is_extra_content = pos < content.length();
+
+  if (!is_extra_content)
+    return root;
+
+  std::string trailing_chars = content.substr(pos);
+
+  if (std::all_of(trailing_chars.begin(), trailing_chars.end(), isspace))
+    return root;
+
+  freeTree(root);
+  throw std::runtime_error("Nieprawidlowy format danych: dodatkowe znaki '" +
+                           trailing_chars + "' po strukturze drzewa");
 }
 
 void storeInorder(Node *root, std::vector<int> &vals) {
@@ -151,17 +155,21 @@ void printVisualTreeRecursive(Node *node, const std::string &prefix,
 
   std::string rightChildPrefixContinuation =
       isRoot ? "    " : (isLeftChild ? "│   " : "    ");
+
   printVisualTreeRecursive(node->right, prefix + rightChildPrefixContinuation,
                            false, false);
 
   std::cout << prefix;
+
   if (!isRoot) {
     std::cout << (isLeftChild ? "└── " : "┌── ");
   }
+
   std::cout << node->val << std::endl;
 
   std::string leftChildPrefixContinuation =
       isRoot ? "    " : (isLeftChild ? "    " : "│   ");
+
   printVisualTreeRecursive(node->left, prefix + leftChildPrefixContinuation,
                            true, false);
 }
