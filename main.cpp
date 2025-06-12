@@ -27,16 +27,22 @@ Node *loadTreeFromString(const std::string &str, size_t &pos) {
   }
 
   size_t initial_val_pos = pos;
+
+  if (pos < str.length() && str[pos] == '-') {
+    pos++;
+  }
+
+  size_t digits_start_pos = pos;
+
   while (pos < str.length() && std::isdigit(str[pos])) {
     pos++;
   }
 
-  if (pos == initial_val_pos) {
+  if (pos == digits_start_pos) {
     throw std::runtime_error(
         "Nieprawidlowy format danych: oczekiwano wartosci wezla w pozycji " +
         std::to_string(initial_val_pos));
   }
-
   std::string val_str = str.substr(initial_val_pos, pos - initial_val_pos);
   int value;
   try {
